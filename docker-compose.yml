@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.41
+    container_name: jaeger
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "14268:14268"   # HTTP trace ingest
+      - "6831:6831/udp" 
+    networks:
+      - perf-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.83.0
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - perf-net
+
+  spring-app:
+    build:
+      context: ./spring-boot-sample
+    container_name: spring-app
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
+      - OTEL_SERVICE_NAME=spring-sample
+      - COURSE_FILE_URL=/mnt/data/Advanced_API_Performance_Tuning_20251105_123619_0000.docx
+    ports:
+      - "8081:8080"
+    depends_on:
+      - otel-collector
+    networks:
+      - perf-net
+
+  # dotnet-app:
+  #   build:
+  #     context: ./dotnet8-sample
+  #   container_name: dotnet-app
+  #   environment:
+  #     - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
+  #     - OTEL_SERVICE_NAME=dotnet-sample
+  #     - ASPNETCORE_URLS=http://+:8080
+  #     - COURSE_FILE_URL=/mnt/data/Advanced_API_Performance_Tuning_20251105_123619_0000.docx
+  #   ports:
+  #     - "8082:8080"
+  #   depends_on:
+  #     - otel-collector
+  #   networks:
+  #     - perf-net
+
+  k6:
+    image: grafana/k6:latest
+    container_name: k6
+    volumes:
+      - ./k6:/k6
+    entrypoint: ["k6", "run", "/k6/baseline.js"]
+    depends_on:
+      - spring-app
+      #- dotnet-app
+    networks:
+      - perf-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - perf-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - perf-net
+
+networks:
+  perf-net:
+    driver: bridge
