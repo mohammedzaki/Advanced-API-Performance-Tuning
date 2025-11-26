@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option csharp_namespace = "ProtoServices";
+option java_package = "com.example.demo.grpc";
+option java_outer_classname = "ProductProto";
+
+service Product {
+  rpc GetProduct (ProductRequest) returns (ProductResponse);
+  rpc GetProducts (Empty) returns (ProductListResponse);
+}
+
+message Empty {
+}
+
+message ProductRequest {
+    int32 id = 1;
+}
+
+message ProductResponse {
+    int32 id = 1;
+    string name = 2;
+    double price = 3;
+    string description = 4;
+}
+
+message ProductListResponse {
+    repeated ProductResponse products = 1;
+}

@@ -14,7 +14,6 @@ export const options = {
 };
 
 export default function () {
-  http.get('http://spring-app:8080/api/products');
-  http.get('http://spring-app:8080/api/products-delayed');
+  http.get('http://dotnet-app:8080/api/Products');
   sleep(1);
 }

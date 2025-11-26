@@ -1,0 +1,7 @@
+- Add DB Ad
+- Connect DB
+- Connect OTel or Promo
+- Add JSON Rest API
+- Add proto
+- connect with java proto
+- use graphQL
