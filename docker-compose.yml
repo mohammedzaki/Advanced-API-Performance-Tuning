@@ -45,9 +45,11 @@ services:
       - OTEL_SERVICE_NAME=dotnet-sample
       - COURSE_FILE_URL=/mnt/data/Advanced_API_Performance_Tuning_20251105_123619_0000.docx
       - ASPNETCORE_ENVIRONMENT=Development
-      - Kestrel__EndpointDefaults__Protocols=Http2
+      - Kestrel__EndpointDefaults__Protocols=Http1
+      - ConnectionStrings__Default=Server=mssql,1433;Database=AdventureWorks2022;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;
     ports:
-      - "8082:8080"  # gRPC service on HTTP/2
+      - "8085:8085"  # gRPC service on HTTP/2
+      - "8082:8080"  # Rest service on HTTP/1.1
     depends_on:
       - otel-collector
     networks:

@@ -19,8 +19,8 @@ public class ProductGrpcClientService {
     @PostConstruct
     public void init() {
         // Connect to the .NET gRPC service running in Docker
-        // Use Docker service name 'dotnet-app' and port 8080 (internal container port)
-        channel = ManagedChannelBuilder.forAddress("dotnet-app", 8080)
+        // Use Docker service name 'dotnet-app' and port 8085 (internal container port)
+        channel = ManagedChannelBuilder.forAddress("dotnet-app", 8085)
                 .usePlaintext()
                 .build();
         
