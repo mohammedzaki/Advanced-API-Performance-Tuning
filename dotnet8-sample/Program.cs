@@ -43,7 +43,7 @@ builder.Services.AddGrpc(options =>
 // Configure Kestrel ports - Environment variables take precedence
 var httpPort = builder.Configuration.GetValue<int>("DOTNET_HTTP_PORT", 
     builder.Configuration.GetValue<int>("DOTNET_CONTAINER_HTTP_PORT", 
-        builder.Configuration.GetValue<int>("Kestrel:Endpoints:Http:Port", 8080)));
+        builder.Configuration.GetValue<int>("Kestrel:Endpoints:Http:Port", 8081)));
 
 var grpcPort = builder.Configuration.GetValue<int>("DOTNET_GRPC_PORT", 
     builder.Configuration.GetValue<int>("DOTNET_CONTAINER_GRPC_PORT", 
@@ -67,6 +67,18 @@ Console.WriteLine($"[KESTREL] gRPC HTTP/2 endpoint configured on port: {grpcPort
 
 // register product service
 builder.Services.AddSingleton<dotnet_sample.Services.ProductService>();
+
+// RabbitMQ configuration
+var rabbitHost = builder.Configuration["RABBITMQ_HOST"] ?? "rabbitmq";
+var rabbitPort = builder.Configuration.GetValue<int>("RABBITMQ_PORT", 5672);
+var rabbitUser = builder.Configuration["RABBITMQ_USER"] ?? "guest";
+var rabbitPass = builder.Configuration["RABBITMQ_PASS"] ?? "guest";
+var rabbitExchange = builder.Configuration["RABBITMQ_EXCHANGE"] ?? "reports-exchange";
+var rabbitRoutingKey = builder.Configuration["RABBITMQ_ROUTING_KEY"] ?? "sales.report";
+var rabbitQueue = builder.Configuration["RABBITMQ_QUEUE"] ?? "sales-reports";
+
+builder.Services.AddSingleton(new dotnet_sample.Services.RabbitMqPublisher(
+    rabbitHost, rabbitPort, rabbitUser, rabbitPass, rabbitExchange, rabbitRoutingKey, rabbitQueue));
 
 // Configure Circuit Breaker policies
 builder.Services.AddResiliencePipeline("database-circuit-breaker", builder =>

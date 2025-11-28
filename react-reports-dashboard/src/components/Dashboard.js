@@ -110,7 +110,7 @@ const Dashboard = () => {
                   <div className="text-end">
                     <small>API Endpoint</small>
                     <br />
-                    <code>localhost:8080</code>
+                    <code>localhost:8081</code>
                   </div>
                 </Col>
               </Row>

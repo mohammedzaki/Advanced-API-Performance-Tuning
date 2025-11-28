@@ -12,11 +12,24 @@ builder.Services.AddSwaggerGen();
 // Add gRPC client
 builder.Services.AddGrpcClient<Product.ProductClient>(options =>
 {
-    options.Address = new Uri("http://dotnet-app:8080"); // Docker service name
+    options.Address = new Uri("http://dotnet-app:8083"); // Docker service name
 });
 
 // Register our gRPC client service
 builder.Services.AddScoped<ProductGrpcClientService>();
+
+// RabbitMQ consumer registration
+var rabbitHost = builder.Configuration["RABBITMQ_HOST"] ?? "rabbitmq";
+var rabbitPort = builder.Configuration.GetValue<int>("RABBITMQ_PORT", 5672);
+var rabbitUser = builder.Configuration["RABBITMQ_USER"] ?? "guest";
+var rabbitPass = builder.Configuration["RABBITMQ_PASS"] ?? "guest";
+var rabbitExchange = builder.Configuration["RABBITMQ_EXCHANGE"] ?? "reports-exchange";
+var rabbitRoutingKey = builder.Configuration["RABBITMQ_ROUTING_KEY"] ?? "sales.report";
+var rabbitQueue = builder.Configuration["RABBITMQ_QUEUE"] ?? "sales-reports";
+
+builder.Services.AddHostedService(sp => new RabbitMqConsumerService(
+    sp.GetRequiredService<ILogger<RabbitMqConsumerService>>(),
+    rabbitHost, rabbitPort, rabbitUser, rabbitPass, rabbitExchange, rabbitRoutingKey, rabbitQueue));
 
 // Add OpenTelemetry
 var serviceName = builder.Configuration.GetValue<string>("OTEL_SERVICE_NAME") ?? "grpc-client-test";

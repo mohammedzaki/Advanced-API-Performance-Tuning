@@ -9,9 +9,12 @@ namespace dotnet_sample.Controllers
     {
         private readonly ILogger<ReportController> _logger;
 
-        public ReportController(ILogger<ReportController> logger)
+        private readonly dotnet_sample.Services.RabbitMqPublisher _publisher;
+
+        public ReportController(ILogger<ReportController> logger, dotnet_sample.Services.RabbitMqPublisher publisher)
         {
             _logger = logger;
+            _publisher = publisher;
         }
 
         [HttpGet("sales-report")]
@@ -26,6 +29,9 @@ namespace dotnet_sample.Controllers
                 stopwatch.Stop();
                 
                 _logger.LogInformation("Sales report generated in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                // Publish summary to RabbitMQ
+                var summaryMessage = $"{{\"type\":\"sales-summary\",\"generatedAt\":\"{DateTime.UtcNow:o}\",\"months\":{months},\"totalRecords\":{report.Records.Count},\"totalRevenue\":{report.TotalRevenue}}}";
+                _publisher.Publish(summaryMessage);
                 
                 return Ok(new
                 {

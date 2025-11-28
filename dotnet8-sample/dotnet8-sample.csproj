@@ -9,7 +9,9 @@
   <ItemGroup>
     <Protobuf Include="proto/product.proto" GrpcServices="Server" />
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Google.Protobuf" Version="3.33.1" />

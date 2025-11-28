@@ -32,7 +32,7 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
       - SERVER_PORT=${SPRING_CONTAINER_PORT:-8080}
     ports:
-      - "${SPRING_PORT:-8081}:${SPRING_CONTAINER_PORT:-8080}"
+      - "${SPRING_PORT:-8080}:${SPRING_CONTAINER_PORT:-8080}"
     depends_on:
       - otel-collector
     networks:
@@ -95,6 +95,14 @@ services:
       - REPORT_DEFAULT_MONTHS=${REPORT_DEFAULT_MONTHS:-3}
       - REPORT_DEFAULT_RECORDS=${REPORT_DEFAULT_RECORDS:-500}
       - REPORT_MAX_COMPLEXITY=${REPORT_MAX_COMPLEXITY:-10}
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE:-reports-exchange}
+      - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY:-sales.report}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-sales-reports}
     ports:
       - "${DOTNET_GRPC_PORT:-8083}:${DOTNET_CONTAINER_GRPC_PORT:-8083}"  # gRPC service on HTTP/2
       - "${DOTNET_REST_PORT:-8081}:${DOTNET_CONTAINER_HTTP_PORT:-8081}"   # Rest service on HTTP/1.1
@@ -102,6 +110,8 @@ services:
       mssql:
         condition: service_healthy
       otel-collector:
+        condition: service_started
+      rabbitmq:
         condition: service_started
     networks:
       - ${DOCKER_NETWORK:-perf-net}
@@ -116,8 +126,16 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - GRPC_ENABLE_REFLECTION=${GRPC_ENABLE_REFLECTION:-true}
       - GRPC_ENABLE_DETAILED_ERRORS=${GRPC_ENABLE_DETAILED_ERRORS:-true}
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:-guest}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE:-reports-exchange}
+      - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY:-sales.report}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-sales-reports}
     ports:
-      - "${GRPC_CLIENT_TEST_PORT:-8084}:8083"  # gRPC client test API
+      - "${GRPC_CLIENT_TEST_PORT:-8084}:${GRPC_CLIENT_CONTAINER_PORT:-8080}"  # gRPC client test API
     depends_on:
       - otel-collector
       - dotnet-app
@@ -172,6 +190,18 @@ services:
       - "3001:80"  # React dashboard on port 3001
     depends_on:
       - dotnet-app
+    networks:
+      - ${DOCKER_NETWORK:-perf-net}
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS:-guest}
     networks:
       - ${DOCKER_NETWORK:-perf-net}
 

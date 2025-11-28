@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { sleep } from 'k6';
 
 // Configuration from environment variables with defaults
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:8081';
 const VUS = __ENV.VUS || 100;
 const DURATION = __ENV.DURATION || '10s';
 const SLEEP_DURATION = __ENV.SLEEP_DURATION || 0.2;
