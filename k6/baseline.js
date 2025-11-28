@@ -1,20 +1,30 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
 
+// Configuration from environment variables with defaults
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const VUS = __ENV.VUS || 100;
+const DURATION = __ENV.DURATION || '10s';
+const SLEEP_DURATION = __ENV.SLEEP_DURATION || 0.2;
+
 export const options = {
-  vus: 100,
-  duration: '10s',
+  vus: parseInt(VUS),
+  duration: DURATION,
 
   thresholds: {
     http_req_duration: [
-      'p(50)<150', // 50% of requests must complete below 200ms
-      'p(99)<300' // 99% of requests must complete below 1000ms
+      'p(50)<150', // 50% of requests must complete below 150ms
+      'p(99)<300'  // 99% of requests must complete below 300ms
     ],
   },
 };
 
 export default function () {
-  //http.get('http://localhost:8080/api/blocking-sql/blocking-optimized'); // -> 1 without Threading
-  http.get('http://localhost:8080/api/blocking-sql/non-blocking-optimized'); // -> 2 -> with Threading 
-  sleep(.2);
+  // Option 1: Blocking SQL call (without threading)
+  //http.get(`${BASE_URL}/api/blocking-sql/blocking-optimized`);
+  
+  // Option 2: Non-blocking SQL call (with threading optimization)
+  http.get(`${BASE_URL}/api/blocking-sql/non-blocking-optimized`);
+  
+  sleep(parseFloat(SLEEP_DURATION));
 }

@@ -2,12 +2,22 @@
 
 This project provides a comprehensive environment for demonstrating API performance tuning techniques using containerized applications, monitoring, and load testing tools.
 
+## 🚀 **NEW: Environment Variable Configuration**
+
+**This demo has been fully updated to use environment variables for all configurations!** 
+- All ports, URLs, and settings are now configurable via the `.env` file
+- Easy customization for different environments (development, staging, production)
+- Automated setup scripts for Windows and Linux/macOS
+- See [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) for detailed documentation
+
 ## Architecture Overview
 
 The demo environment includes:
 
 - **Spring Boot Application** - Sample REST API with performance scenarios
-- **.NET 8 Application** - Alternative sample API (currently commented out)
+- **.NET 8 Application** - Full-featured API with Circuit Breakers, gRPC, and performance testing endpoints
+- **gRPC Client Test** - gRPC client testing service  
+- **React Dashboard** - Interactive dashboard for monitoring and testing
 - **Jaeger** - Distributed tracing and monitoring
 - **OpenTelemetry Collector** - Telemetry data collection and processing
 - **Prometheus** - Metrics collection and storage
@@ -19,67 +29,149 @@ The demo environment includes:
 - Docker Desktop or Docker with Docker Compose
 - Git (to clone the repository)
 - At least 4GB of available RAM for all containers
+- PowerShell (Windows) or Bash (Linux/macOS) for automated scripts
 
 ## Quick Start
 
-### 1. Clone and Navigate to the Project
+### 🎯 **Recommended: Use the Automated Setup Scripts**
+
+**Windows (PowerShell):**
+```powershell
+# Start all services with environment variable configuration
+.\run-demo.ps1 start
+
+# Show current configuration
+.\run-demo.ps1 config
+
+# Run performance tests  
+.\run-demo.ps1 test
+```
+
+**Linux/macOS (Bash):**
+```bash
+# Make script executable and start all services
+chmod +x run-demo.sh
+./run-demo.sh start
+
+# Show current configuration
+./run-demo.sh config
+
+# Run performance tests
+./run-demo.sh test
+```
+
+### 📋 **Manual Setup (Alternative)**
+
+1. **Clone and Navigate to the Project**
 ```bash
 git clone https://github.com/mohammedzaki/Advanced-API-Performance-Tuning.git
 cd Advanced-API-Performance-Tuning/demos
 ```
 
-### 2. Start the Environment
+2. **Review and Customize Configuration**
+```bash
+# View current environment variables
+cat .env
+
+# Copy and customize if needed
+cp .env .env.local
+# Edit .env.local with your preferences
+```
+
+3. **Start the Environment**
 ```bash
 docker compose up --build -d
 ```
 
-This command will:
-- Build the Spring Boot application image
-- Pull all required images (Jaeger, Prometheus, Grafana, k6, etc.)
-- Start all services in the background
-- Set up networking between containers
-
-### 3. Verify Services are Running
+4. **Verify Services are Running**
 ```bash
 docker compose ps
 ```
 
-You should see all services with "Up" status.
-
 ## Accessing the Applications
 
-Once the environment is running, you can access the following services:
+Once the environment is running, you can access the following services (ports configurable via `.env`):
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Spring Boot API** | http://localhost:8081 | Main sample API |
-| **Jaeger UI** | http://localhost:16686 | Distributed tracing interface |
-| **Prometheus** | http://localhost:9090 | Metrics collection interface |
-| **Grafana** | http://localhost:3000 | Visualization dashboards (admin/admin) |
+| Service | Default URL | Environment Variable | Description |
+|---------|-------------|----------------------|-------------|
+| **.NET REST API** | http://localhost:8080 | `DOTNET_REST_PORT` | Main sample API with Circuit Breakers |
+| **.NET gRPC Service** | http://localhost:8083 | `DOTNET_GRPC_PORT` | gRPC service endpoints |
+| **Spring Boot API** | http://localhost:8081 | `SPRING_PORT` | Alternative sample API |
+| **gRPC Client Test** | http://localhost:8084 | `GRPC_CLIENT_TEST_PORT` | gRPC client testing service |
+| **React Dashboard** | http://localhost:3001 | N/A (fixed) | Interactive monitoring dashboard |
+| **Jaeger UI** | http://localhost:16686 | `JAEGER_UI_PORT` | Distributed tracing interface |
+| **Prometheus** | http://localhost:9090 | `PROMETHEUS_PORT` | Metrics collection interface |
+| **Grafana** | http://localhost:3000 | `GRAFANA_PORT` | Visualization dashboards (admin/admin) |
+
+### 🎛️ **Quick Access Commands**
+```bash
+# Show all current URLs with your configuration
+./run-demo.sh config      # Linux/macOS
+.\run-demo.ps1 config     # Windows
+```
 
 ## API Endpoints
 
-The Spring Boot application provides these test endpoints:
+### .NET Application (Primary - Port 8080)
+**REST APIs:**
+- `GET /api/health` - Health check endpoint
+- `GET /api/products` - Product listing with optional filtering
+- `GET /api/blocking-sql/blocking-optimized` - Synchronous SQL operations
+- `GET /api/blocking-sql/non-blocking-optimized` - Asynchronous SQL operations  
+- `GET /api/report/sales-report?months=N` - Sales report generation
+- `GET /api/report/detailed-analytics?records=N` - Analytics data processing
+- `GET /api/circuit-breaker/status` - Circuit breaker status
+- `GET /api/circuit-breaker/database-test` - Test database circuit breaker
+- `GET /api/circuit-breaker/api-test` - Test API circuit breaker
 
-- `GET http://localhost:8081/api/products` - Standard product listing
-- `GET http://localhost:8081/api/products-delayed` - Simulated slow endpoint for testing
+**gRPC Services (Port 8083):**
+- `ProductService.GetProducts` - gRPC product service
+- Reflection enabled for testing tools
+
+### Spring Boot Application (Port 8081)
+- `GET /api/products` - Standard product listing  
+- `GET /api/products-delayed` - Simulated slow endpoint for testing
+- `GET /actuator/health` - Spring Boot health check
+
+### gRPC Client Test (Port 8084)
+- `GET /api/grpc-test` - Test gRPC communication with .NET service
 
 ## Running Performance Tests
 
-### Manual k6 Test
-To run the k6 load test manually:
+### 🎯 **Using Automated Scripts (Recommended)**
 ```bash
-docker compose run --rm k6 run /k6/baseline.js
+# Run baseline performance test
+./run-demo.sh test           # Linux/macOS
+.\run-demo.ps1 test          # Windows
+
+# Run comprehensive report performance test
+./run-demo.sh test-report    # Linux/macOS  
+.\run-demo.ps1 test-report   # Windows
+
+# Check service health before testing
+./run-demo.sh health         # Linux/macOS
+.\run-demo.ps1 health        # Windows
 ```
 
-### Custom k6 Tests
-You can modify the test script in `k6/baseline.js` or create new test files:
+### Manual k6 Tests
 ```bash
-# Run a custom test file
-docker compose run --rm k6 run /k6/your-test.js
+# Basic performance test
+docker compose run --rm k6
 
-# Run with different parameters
-docker compose run --rm k6 run --vus 50 --duration 60s /k6/baseline.js
+# Custom test with environment variables
+docker compose run --rm -e VUS=200 -e DURATION=60s k6
+
+# Run specific test file
+docker compose run --rm k6 k6 run /k6/report-peformance-testing.js
+```
+
+### 📊 **Test Configuration via Environment Variables**
+Customize performance tests by setting variables in `.env`:
+```bash
+K6_CONCURRENT_USERS=100       # Number of virtual users
+K6_DURATION=30s               # Test duration
+K6_BASE_URL=http://dotnet-app:8080  # Target service
+K6_SLEEP_DURATION=0.2         # Sleep between requests
 ```
 
 ## Monitoring and Observability
